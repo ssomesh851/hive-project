@@ -1,0 +1,41 @@
+
+1)loading the data from local file system to hdfs.
+used hue for load data into hdfs.
+
+2)Staging table which contain given input file data.
+create external table staging_petrol(district string,distributer string ,buy_rate string,
+sell_rate string,volume_in int,volume_out int,year1 int)
+row format delimited
+fields terminated by','
+stored as textfile
+location '/user/cloudera/petrol/'
+tblproperties('skip.header.line.count'='1');
+
+3)final table to for storing the data after applying transformations.
+create external table hive_petrol(district string,distributer string ,buy_rate float,
+sell_rate float,volume_in int,volume_out int,year_sell int)
+row format delimited
+fields terminated by','
+stored as textfile
+location '/user/cloudera/pet/';
+
+4)inserting the data from staging table to final table.
+insert overwrite table hive_petrol
+select district,distributer,round(substring(buy_rate,2)),round(substring(sell_rate,2)),volume_in,volume_out
+,year1 from staging_petrol;
+
+
+5)what is the total amount of petrol sold by distributer in volumes.
+
+sol: select distributer,sum(volume_out) from hive_petrol group by distributer;
+ 
+6)which are the top 10 distributer_ids and also display the amount sold in volume by them individually.
+select district, distributer, sell_rate, volume_out from hive_petrol order by
+volume_out desc limit 10;
+
+7)find real life 10 disributers name who sold petrol in the max amount.
+select distributer,max(sell_rate) from hive_petrol group by distributer;
+
+8)find real life 10 disributers name who sold petrol in the min amount.
+select distributer,min(sell_rate) from hive_petrol group by distributer;
+ 
